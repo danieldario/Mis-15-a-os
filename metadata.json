@@ -1,0 +1,6 @@
+{
+  "name": "Mis 15",
+  "description": "Muro interactivo de recuerdos y dedicatorias en vivo para fiesta de 15 años con acceso QR y modo proyección.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
