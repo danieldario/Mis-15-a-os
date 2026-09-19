@@ -112,6 +112,10 @@ class MemoryViewModel(application: Application) : AndroidViewModel(application) 
     private val _currentQrTable = MutableStateFlow("Mesa 5")
     val currentQrTable: StateFlow<String> = _currentQrTable.asStateFlow()
 
+    // Shared App URL for guests at party
+    private val _partySharedUrl = MutableStateFlow("https://ais-pre-njjrkiezchlg4dq6gh4srx-704641902281.us-east1.run.app")
+    val partySharedUrl: StateFlow<String> = _partySharedUrl.asStateFlow()
+
     // Slideshow Mode (Projector mode)
     private val _isSlideshowOpen = MutableStateFlow(false)
     val isSlideshowOpen: StateFlow<Boolean> = _isSlideshowOpen.asStateFlow()
@@ -333,6 +337,10 @@ class MemoryViewModel(application: Application) : AndroidViewModel(application) 
 
     fun setQrTable(table: String) {
         _currentQrTable.value = table
+    }
+
+    fun setPartySharedUrl(url: String) {
+        _partySharedUrl.value = url
     }
 
     // Slideshow controls

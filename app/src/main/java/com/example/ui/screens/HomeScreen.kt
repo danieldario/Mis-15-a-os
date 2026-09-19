@@ -104,6 +104,7 @@ fun HomeScreen(
 
     val isTableQrCardOpen by viewModel.isTableQrCardOpen.collectAsStateWithLifecycle()
     val currentQrTable by viewModel.currentQrTable.collectAsStateWithLifecycle()
+    val partySharedUrl by viewModel.partySharedUrl.collectAsStateWithLifecycle()
 
     val isSlideshowOpen by viewModel.isSlideshowOpen.collectAsStateWithLifecycle()
     val slideshowIndex by viewModel.slideshowIndex.collectAsStateWithLifecycle()
@@ -385,6 +386,7 @@ fun HomeScreen(
     if (isTableQrCardOpen) {
         TableQrCardDialog(
             selectedTable = currentQrTable,
+            sharedUrl = partySharedUrl,
             onSelectTable = { viewModel.setQrTable(it) },
             onJoinAsGuestOfTable = { table ->
                 viewModel.setGuestProfile(

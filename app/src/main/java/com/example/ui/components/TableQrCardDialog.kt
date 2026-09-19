@@ -1,7 +1,8 @@
 package com.example.ui.components
 
+import android.content.Intent
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
@@ -33,16 +35,16 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -58,14 +60,27 @@ import com.example.ui.theme.QuinceRose
 import com.example.ui.theme.QuinceRoseDark
 import com.example.ui.theme.QuinceTextPrimary
 import com.example.ui.theme.QuinceTextSecondary
+import com.example.util.QrCodeGenerator
 
 @Composable
 fun TableQrCardDialog(
     selectedTable: String,
+    sharedUrl: String,
     onSelectTable: (String) -> Unit,
     onJoinAsGuestOfTable: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
+
+    // Generate genuine ZXing QR bitmap pointing to the party link
+    val qrBitmap = remember(sharedUrl) {
+        QrCodeGenerator.generateQrBitmap(
+            content = sharedUrl,
+            size = 512,
+            foregroundColor = QuinceRoseDark.toArgb(),
+            backgroundColor = android.graphics.Color.WHITE
+        )
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -101,7 +116,7 @@ fun TableQrCardDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Tarjetón de Mesa con QR",
+                            text = "Código QR de la Fiesta",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -118,7 +133,7 @@ fun TableQrCardDialog(
                 }
 
                 Text(
-                    text = "Tarjetón de bienvenida que se coloca para que los invitados escaneen el QR y compartan fotos en vivo:",
+                    text = "Muestra o imprime este tarjetón en la fiesta para que los invitados escaneen el QR y accedan al instante al espacio de recuerdos:",
                     style = MaterialTheme.typography.bodySmall.copy(color = QuinceTextSecondary),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -161,56 +176,63 @@ fun TableQrCardDialog(
                             fontWeight = FontWeight.Medium
                         )
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(14.dp))
 
-                        // Table Badge
-                        Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = QuinceRose,
-                            border = BorderStroke(1.dp, QuinceGold)
-                        ) {
-                            Text(
-                                text = selectedTable.uppercase(),
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp,
-                                letterSpacing = 0.5.sp
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Beautiful stylized Canvas QR Code
+                        // High Quality ZXing Scannable QR Code
                         Box(
                             modifier = Modifier
-                                .size(170.dp)
+                                .size(190.dp)
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(Color.White)
-                                .padding(12.dp),
+                                .padding(10.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            QrCodeCanvas(tableNumber = selectedTable)
+                            if (qrBitmap != null) {
+                                Image(
+                                    bitmap = qrBitmap.asImageBitmap(),
+                                    contentDescription = "Código QR para escanear y acceder a la fiesta de Luchy",
+                                    modifier = Modifier.size(170.dp)
+                                )
+                            }
 
-                            // Center Emblem Badge
+                            // Center Emblem Badge overlay
                             Surface(
                                 shape = CircleShape,
                                 color = QuinceRose,
                                 border = BorderStroke(2.dp, QuinceGold),
-                                modifier = Modifier.size(38.dp)
+                                modifier = Modifier.size(36.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Text(
                                         text = "15",
                                         color = Color.White,
                                         fontWeight = FontWeight.Black,
-                                        fontSize = 14.sp
+                                        fontSize = 13.sp
                                     )
                                 }
                             }
                         }
 
                         Spacer(modifier = Modifier.height(14.dp))
+
+                        // URL pill indicator
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = Color.White.copy(alpha = 0.8f),
+                            border = BorderStroke(1.dp, QuinceGold.copy(alpha = 0.4f)),
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        ) {
+                            Text(
+                                text = sharedUrl,
+                                maxLines = 1,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                color = QuinceRoseDark,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         // Instructions
                         Text(
@@ -224,7 +246,7 @@ fun TableQrCardDialog(
                         Spacer(modifier = Modifier.height(6.dp))
 
                         Text(
-                            text = "1. Escanea el código con tu cámara\n2. Sube tus fotos de la fiesta en vivo\n3. Las fotos se proyectarán en pantalla gigante",
+                            text = "1. Apunta la cámara de tu celular al código\n2. Sube tus fotos de la fiesta en vivo\n3. Participa votando por tus fotos favoritas",
                             fontSize = 12.sp,
                             lineHeight = 18.sp,
                             color = QuinceTextSecondary,
@@ -233,24 +255,57 @@ fun TableQrCardDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
-                // Action buttons
-                Button(
-                    onClick = {
-                        onJoinAsGuestOfTable(selectedTable)
-                        onDismiss()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .testTag("simulate_qr_scan_button"),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = QuinceRose)
+                // Action buttons: Share link & Quick join
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = QuinceGold)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Ingresar como Invitado", fontWeight = FontWeight.Bold)
+                    // Share Link Button
+                    OutlinedButton(
+                        onClick = {
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(
+                                    Intent.EXTRA_SUBJECT,
+                                    "👑 Mis 15 Luchy - Muro de Recuerdos en Vivo"
+                                )
+                                putExtra(
+                                    Intent.EXTRA_TEXT,
+                                    "¡Hola! Entra al enlace para compartir tus fotos y dedicatorias de los 15 de Luchy: $sharedUrl"
+                                )
+                            }
+                            context.startActivity(Intent.createChooser(shareIntent, "Compartir enlace de la fiesta"))
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                            .testTag("share_party_link_button"),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = null, tint = QuinceRose, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Compartir", color = QuinceRose, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    }
+
+                    // Direct Join button
+                    Button(
+                        onClick = {
+                            onJoinAsGuestOfTable(selectedTable)
+                            onDismiss()
+                        },
+                        modifier = Modifier
+                            .weight(1.3f)
+                            .height(48.dp)
+                            .testTag("simulate_qr_scan_button"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = QuinceRose)
+                    ) {
+                        Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = QuinceGold, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Entrar a la App", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -261,76 +316,6 @@ fun TableQrCardDialog(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text("Cerrar")
-                }
-            }
-        }
-    }
-}
-
-/**
- * Draws a clean procedural QR pattern with position markers and randomized data blocks
- * based on table seed for realistic preview.
- */
-@Composable
-private fun QrCodeCanvas(tableNumber: String) {
-    val darkColor = QuinceRoseDark
-    val lightColor = Color.Transparent
-
-    Canvas(modifier = Modifier.size(150.dp)) {
-        val count = 21 // 21x21 standard QR grid
-        val cellSize = size.width / count
-
-        fun drawSquareFinder(gridX: Int, gridY: Int) {
-            // Outer 7x7
-            drawRoundRect(
-                color = darkColor,
-                topLeft = Offset(gridX * cellSize, gridY * cellSize),
-                size = Size(7 * cellSize, 7 * cellSize),
-                cornerRadius = CornerRadius(4.dp.toPx(), 4.dp.toPx())
-            )
-            // Inner white 5x5
-            drawRoundRect(
-                color = Color.White,
-                topLeft = Offset((gridX + 1) * cellSize, (gridY + 1) * cellSize),
-                size = Size(5 * cellSize, 5 * cellSize),
-                cornerRadius = CornerRadius(2.dp.toPx(), 2.dp.toPx())
-            )
-            // Center dark 3x3
-            drawRoundRect(
-                color = darkColor,
-                topLeft = Offset((gridX + 2) * cellSize, (gridY + 2) * cellSize),
-                size = Size(3 * cellSize, 3 * cellSize),
-                cornerRadius = CornerRadius(2.dp.toPx(), 2.dp.toPx())
-            )
-        }
-
-        // 3 finder patterns
-        drawSquareFinder(0, 0)
-        drawSquareFinder(14, 0)
-        drawSquareFinder(0, 14)
-
-        // Seed data based on table string
-        val seed = tableNumber.hashCode().toLong()
-        val random = java.util.Random(seed)
-
-        for (x in 0 until count) {
-            for (y in 0 until count) {
-                // Avoid finders and center emblem area
-                val inTopLeft = x < 8 && y < 8
-                val inTopRight = x > 12 && y < 8
-                val inBottomLeft = x < 8 && y > 12
-                val inCenter = (x in 8..12) && (y in 8..12)
-
-                if (!inTopLeft && !inTopRight && !inBottomLeft && !inCenter) {
-                    val isBlack = random.nextFloat() > 0.48f
-                    if (isBlack) {
-                        drawRoundRect(
-                            color = darkColor,
-                            topLeft = Offset(x * cellSize, y * cellSize),
-                            size = Size(cellSize * 0.9f, cellSize * 0.9f),
-                            cornerRadius = CornerRadius(1.dp.toPx(), 1.dp.toPx())
-                        )
-                    }
                 }
             }
         }
